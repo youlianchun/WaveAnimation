@@ -58,9 +58,27 @@
     
 }
 
-double get_wave_y(double time_offset, double wave_x, double period, double amplitude)
-{
-    return amplitude/2.0*(sinf(2*M_PI * wave_x/period + M_PI_2 - time_offset/60.0)+1);
+static double get_wave_y(double time_offset, double wave_x, double period, double amplitude) {
+    double x = wave_x;
+    double A = amplitude / 2.0;
+    double O = ( 2 * M_PI ) / period;
+    double P = -time_offset / 60.0;
+    double b = -A;
+    return sin_y(x, A, O, P, b);
+}
+
+/**
+ y = Asin(ωx+φ)+b
+
+ @param x x
+ @param A 决定峰值（即纵向拉伸压缩的倍数)
+ @param O (ω)：决定周期（最小正周期T=2π/∣ω∣）
+ @param P (φ)：决定波形与X轴位置关系或横向移动距离（左加右减）
+ @param b 表示波形在Y轴的位置关系或纵向移动距离（上加下减）
+ @return y
+ */
+static double sin_y(double x, double A, double O, double P, double b) {
+    return A * sin( O * x + P ) + b;
 }
 
 @end

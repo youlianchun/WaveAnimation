@@ -29,6 +29,7 @@
 -(void)awakeFromNib
 {
     [super awakeFromNib];
+    self.autoresizingMask = UIViewAutoresizingNone;
     self.imgView.image = [UIImage imageNamed:@"img.jpg"];
     self.titleLabel.text = @"巴拉巴拉";
     self.subTitleLabel.text = @"📱137****0000";
