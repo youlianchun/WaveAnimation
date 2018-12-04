@@ -81,4 +81,8 @@ static double sin_y(double x, double A, double O, double P, double b) {
     return A * sin( O * x + P ) + b;
 }
 
+static double sin_y_angle(double x, double A, double O, double P) {
+    return A * O * cos( O * x + P );
+}
+
 @end
