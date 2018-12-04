@@ -85,4 +85,11 @@ static double sin_y_angle(double x, double A, double O, double P) {
     return A * O * cos( O * x + P );
 }
 
+static CGPoint sin_y_center(double height, double x, double y, double angle) {
+    double h_2 = height / 2;
+    double cx = h_2 * sin(angle) + x;
+    double cy = h_2 * cos(angle) + y - height;
+    return CGPointMake(cx, cy);
+}
+
 @end
