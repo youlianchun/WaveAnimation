@@ -81,10 +81,28 @@ static double sin_y(double x, double A, double O, double P, double b) {
     return A * sin( O * x + P ) + b;
 }
 
+/**
+ sin_y_angle
+
+ @param x x
+ @param A 决定峰值（即纵向拉伸压缩的倍数)
+ @param O (ω)：决定周期（最小正周期T=2π/∣ω∣）
+ @param P (φ)：决定波形与X轴位置关系或横向移动距离（左加右减）
+ @return angle
+ */
 static double sin_y_angle(double x, double A, double O, double P) {
     return A * O * cos( O * x + P );
 }
 
+/**
+ sin_y_center
+
+ @param height view height
+ @param x x
+ @param y y
+ @param angle angle
+ @return view new center
+ */
 static CGPoint sin_y_center(double height, double x, double y, double angle) {
     double h_2 = height / 2;
     double cx = h_2 * sin(angle) + x;
