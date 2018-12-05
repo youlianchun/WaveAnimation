@@ -77,8 +77,14 @@
 -(void)initBoatAnimation:(WaveAnimation*)animation {
     double h = 4;
     UIView *boatView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 20, h)];
-    boatView.backgroundColor = [UIColor blueColor];
+    boatView.backgroundColor = [UIColor cyanColor];
     [self addSubview:boatView];
+    
+    UIBezierPath *maskPath = [UIBezierPath bezierPathWithRoundedRect:boatView.bounds byRoundingCorners:UIRectCornerBottomLeft | UIRectCornerBottomRight cornerRadii:boatView.bounds.size];
+    CAShapeLayer *maskLayer = [[CAShapeLayer alloc]init];
+    maskLayer.frame = boatView.bounds;
+    maskLayer.path = maskPath.CGPath;
+    boatView.layer.mask = maskLayer;
     
     [animation setWaveCallback:^(double x, double y, double tangentAngle) {
         boatView.center = sin_tangent_center(h, x, y, tangentAngle);
