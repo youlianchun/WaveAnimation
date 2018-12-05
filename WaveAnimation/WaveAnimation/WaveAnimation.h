@@ -10,6 +10,7 @@
 
 @interface WaveAnimation : NSObject
 
+@property (nonatomic, readonly) CGRect waveFrame;
 /**
  创建一个波浪动画
 
@@ -29,7 +30,7 @@
  */
 -(void)setWaveYCallback:(void(^)(double currentY, double tangentAngle))waveY atWaveX:(double)waveX;
 
--(void)setWaveCallback:(void(^)(double x, double y, double tangentAngle))wave;
+-(void)setWaveCallback:(void(^)(double x, double y, double tangentAngle))wave margin:(double)margin;
 
 -(void)removeFromView;
 

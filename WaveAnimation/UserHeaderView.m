@@ -76,7 +76,8 @@
 
 -(void)initBoatAnimation:(WaveAnimation*)animation {
     double h = 4;
-    UIView *boatView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 20, h)];
+    double w = 20;
+    UIView *boatView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, w, h)];
     boatView.backgroundColor = [UIColor cyanColor];
     [self addSubview:boatView];
     
@@ -89,7 +90,7 @@
     [animation setWaveCallback:^(double x, double y, double tangentAngle) {
         boatView.center = sin_tangent_center(h, x, y, tangentAngle);
         boatView.transform = CGAffineTransformMakeRotation(tangentAngle);
-    }];
+    } margin:w/2];
 }
 
 /**

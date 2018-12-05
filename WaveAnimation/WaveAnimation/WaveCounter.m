@@ -67,9 +67,15 @@
     _offset += _speed;
 }
 
--(void)wave:(void(^)(double x, double y, double tangentAngle))wave {
+-(void)wave:(void(^)(double x, double y, double tangentAngle))wave margin:(double)margin {
     double x;
     get_wave2(_offset, 0, _size.width, _size.width, &x);
+    if (x < margin) {
+        x = margin;
+    }
+    if (x > _size.width - margin) {
+        x = _size.width - margin;
+    }
     [self waveY:^(double y, double tangentAngle) {
         wave(x, y, tangentAngle);
     } atWaveX:x];

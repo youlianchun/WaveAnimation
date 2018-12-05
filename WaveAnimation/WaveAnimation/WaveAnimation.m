@@ -35,6 +35,7 @@
 @property (nonatomic, assign) CGFloat waveX;
 @property (nonatomic, copy) void(^waveY)(CGFloat currentY, double tangentAngle);
 @property (nonatomic, copy) void(^wave)(double x, double y, double tangentAngle);
+@property (nonatomic, assign) CGFloat waveM;
 @end
 
 
@@ -118,7 +119,7 @@ void setLayerPath(CAShapeLayer *layer, CGPathRef path) {
     if (self.wave) {
         [self.waveCounter wave:^(double x, double y, double tangentAngle) {
             wself.wave(x, wy + y, tangentAngle);
-        }];
+        } margin:self.waveM];
     }
     [self.waveCounter nextTime];
 }
@@ -128,8 +129,9 @@ void setLayerPath(CAShapeLayer *layer, CGPathRef path) {
     self.waveY = waveY;
 }
 
--(void)setWaveCallback:(void(^)(double x, double y, double tangentAngle))wave {
+-(void)setWaveCallback:(void(^)(double x, double y, double tangentAngle))wave margin:(double)margin {
     self.wave = wave;
+    self.waveM = margin;
 }
 
 -(CAShapeLayer *)waveLayer_fg {

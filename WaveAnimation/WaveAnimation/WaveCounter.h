@@ -14,6 +14,6 @@
 -(instancetype)initWithPeriod:(double)period speed:(double)speed areaSize:(CGSize)size;
 -(void)waveY:(void(^)(double y, double tangentAngle))waveY atWaveX:(double)waveX;
 -(void)wavePath:(void(^)(CGPathRef path1, CGPathRef path2))path;
--(void)wave:(void(^)(double x, double y, double tangentAngle))wave;
+-(void)wave:(void(^)(double x, double y, double tangentAngle))wave margin:(double)margin;
 -(void)nextTime;
 @end
