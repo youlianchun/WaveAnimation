@@ -33,8 +33,8 @@
 @property (nonatomic, strong) UIColor *bgColor;
 
 @property (nonatomic, assign) CGFloat waveX;
-@property (nonatomic, copy) void(^waveY)(CGFloat currentY);
-
+@property (nonatomic, copy) void(^waveY)(CGFloat currentY, double tangentAngle);
+@property (nonatomic, copy) void(^wave)(double x, double y, double tangentAngle);
 @end
 
 
@@ -102,21 +102,34 @@ void setLayerPath(CAShapeLayer *layer, CGPathRef path) {
 
 -(void)doWave {
     __weak typeof(self) wself = self;
-    [self.waveCounter nextTimePath:^(CGPathRef path1, CGPathRef path2) {
+    
+    [self.waveCounter wavePath:^(CGPathRef path1, CGPathRef path2) {
         __strong typeof(self) sself = wself;
         setLayerPath(sself.waveLayer_fg, path1);
         setLayerPath(sself.waveLayer_bg, path2);
-    } waveY:^(double currentY) {
-        __strong typeof(self) sself = wself;
-        if (sself.waveY) {
-            sself.waveY(currentY);
-        }
-    } atWaveX:self.waveX];
+    }];
+    
+    double wy = CGRectGetMinY(_waveFrame);
+    if (self.waveY) {
+        [self.waveCounter waveY:^(double y, double tangentAngle) {
+            wself.waveY(wy + y, tangentAngle);
+        } atWaveX:self.waveX];
+    }
+    if (self.wave) {
+        [self.waveCounter wave:^(double x, double y, double tangentAngle) {
+            wself.wave(x, wy + y, tangentAngle);
+        }];
+    }
+    [self.waveCounter nextTime];
 }
 
--(void)setWaveYCallback:(void(^)(double currentY))waveY atWaveX:(double)waveX {
+-(void)setWaveYCallback:(void(^)(double currentY, double tangentAngle))waveY atWaveX:(double)waveX {
     self.waveX = waveX;
     self.waveY = waveY;
+}
+
+-(void)setWaveCallback:(void(^)(double x, double y, double tangentAngle))wave {
+    self.wave = wave;
 }
 
 -(CAShapeLayer *)waveLayer_fg {

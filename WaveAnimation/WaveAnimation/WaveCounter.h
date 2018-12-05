@@ -12,7 +12,8 @@
 @interface WaveCounter : NSObject
 
 -(instancetype)initWithPeriod:(double)period speed:(double)speed areaSize:(CGSize)size;
-
--(void)nextTimePath:(void(^)(CGPathRef path1, CGPathRef path2))path waveY:(void(^)(double currentY))waveY atWaveX:(double)waveX;
-
+-(void)waveY:(void(^)(double y, double tangentAngle))waveY atWaveX:(double)waveX;
+-(void)wavePath:(void(^)(CGPathRef path1, CGPathRef path2))path;
+-(void)wave:(void(^)(double x, double y, double tangentAngle))wave;
+-(void)nextTime;
 @end

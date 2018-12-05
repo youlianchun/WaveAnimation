@@ -27,7 +27,9 @@
  @param waveY callback
  @param waveX 高度所在x位置
  */
--(void)setWaveYCallback:(void(^)(double currentY))waveY atWaveX:(double)waveX ;
+-(void)setWaveYCallback:(void(^)(double currentY, double tangentAngle))waveY atWaveX:(double)waveX;
+
+-(void)setWaveCallback:(void(^)(double x, double y, double tangentAngle))wave;
 
 -(void)removeFromView;
 
