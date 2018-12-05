@@ -14,32 +14,46 @@
 @property (nonatomic) WaveAnimation *waveAnimation;
 @end
 
-@interface WaveAnimation ()
-
-@property (nonatomic, weak) UIView *view;
-
-@property (nonatomic, assign) CGRect waveFrame;
-@property (nonatomic, assign) double wavePeriod;
-@property (nonatomic, assign) double waveSpeed;
-
-@property (nonatomic, strong) WaveCounter *waveCounter;
-
-@property (nonatomic, strong) CADisplayLink *displayLink;
-
-@property (nonatomic, strong) CAShapeLayer *waveLayer_fg;
-@property (nonatomic, strong) CAShapeLayer *waveLayer_bg;
-
-@property (nonatomic, strong) UIColor *fgColor;
-@property (nonatomic, strong) UIColor *bgColor;
-
-@property (nonatomic, assign) CGFloat waveX;
-@property (nonatomic, copy) void(^waveY)(CGFloat currentY, double tangentAngle);
-@property (nonatomic, copy) void(^wave)(double x, double y, double tangentAngle);
-@property (nonatomic, assign) CGFloat waveM;
+@implementation UIView (WaveAnimation)
+-(WaveAnimation *)waveAnimation {
+    return objc_getAssociatedObject(self, @selector(waveAnimation));
+}
+-(void)setWaveAnimation:(WaveAnimation *)waveAnimation {
+    objc_setAssociatedObject(self, @selector(waveAnimation), waveAnimation, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
 @end
 
 
+
+
+@interface WaveAnimation ()
+@property (nonatomic, readonly) WaveCounter *waveCounter;
+@property (nonatomic, readonly) CADisplayLink *displayLink;
+@property (nonatomic, readonly) CAShapeLayer *waveLayer_fg;
+@property (nonatomic, readonly) CAShapeLayer *waveLayer_bg;
+@property (nonatomic, readonly) CGFloat waveX;
+@property (nonatomic, readonly) void(^waveY)(CGFloat currentY, double tangentAngle);
+@property (nonatomic, readonly) CGFloat waveM;
+@property (nonatomic, readonly) void(^wave)(double x, double y, double tangentAngle);
+@end
+
 @implementation WaveAnimation
+{
+    __weak UIView *_view;
+    UIColor *_fgColor;
+    UIColor *_bgColor;
+}
+@synthesize waveFrame = _waveFrame;
+@synthesize wavePeriod = _wavePeriod;
+@synthesize waveSpeed = _waveSpeed;
+@synthesize waveCounter = _waveCounter;
+@synthesize displayLink = _displayLink;
+@synthesize waveLayer_fg = _waveLayer_fg;
+@synthesize waveLayer_bg = _waveLayer_bg;
+@synthesize waveX = _waveX;
+@synthesize waveY = _waveY;
+@synthesize waveM = _waveM;
+@synthesize wave = _wave;
 
 -(instancetype)initWithView:(UIView*)view waveFrame:(CGRect)frame wavePeriod:(double)period waveSpeed:(double)speed {
     if (!view) {
@@ -51,8 +65,8 @@
         _wavePeriod = period;
         _waveSpeed = speed;
         _view = view;
-        self.fgColor = [UIColor whiteColor];
-        self.bgColor = [UIColor colorWithWhite:1 alpha:0.5];
+        _fgColor = [UIColor whiteColor];
+        _bgColor = [UIColor colorWithWhite:1 alpha:0.5];
         [self addToView];
     }
     return self;
@@ -63,14 +77,14 @@
 }
 
 -(BOOL)didAdd {
-   return self.view.waveAnimation != nil;
+   return _view.waveAnimation != nil;
 }
 
 -(void)addToView {
     if (![self didAdd]) {
-        [self.view.layer addSublayer:self.waveLayer_bg];
-        [self.view.layer addSublayer:self.waveLayer_fg];
-        self.view.waveAnimation = self;
+        [_view.layer addSublayer:self.waveLayer_bg];
+        [_view.layer addSublayer:self.waveLayer_fg];
+        _view.waveAnimation = self;
     }
 }
 
@@ -78,21 +92,21 @@
     if ([self didAdd]) {
         [_waveLayer_fg removeFromSuperlayer];
         [_waveLayer_bg removeFromSuperlayer];
-        self.view.waveAnimation = nil;
+        _view.waveAnimation = nil;
     }
 }
 
 - (void)start {
-    if (!self.displayLink) {
-        self.displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(doWave)];
-        [self.displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
+    if (!_displayLink) {
+        _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(doWave)];
+        [_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
     }
 }
 
 - (void)stop {
-    if (self.displayLink) {
-        [self.displayLink invalidate];
-        self.displayLink = nil;
+    if (_displayLink) {
+        [_displayLink invalidate];
+        _displayLink = nil;
     }
 }
 
@@ -111,34 +125,34 @@ void setLayerPath(CAShapeLayer *layer, CGPathRef path) {
     }];
     
     double wy = CGRectGetMinY(_waveFrame);
-    if (self.waveY) {
+    if (_waveY) {
         [self.waveCounter waveY:^(double y, double tangentAngle) {
             wself.waveY(wy + y, tangentAngle);
-        } atWaveX:self.waveX];
+        } atWaveX:_waveX];
     }
-    if (self.wave) {
+    if (_wave) {
         [self.waveCounter wave:^(double x, double y, double tangentAngle) {
             wself.wave(x, wy + y, tangentAngle);
-        } margin:self.waveM];
+        } margin:_waveM];
     }
     [self.waveCounter nextTime];
 }
 
 -(void)setWaveYCallback:(void(^)(double currentY, double tangentAngle))waveY atWaveX:(double)waveX {
-    self.waveX = waveX;
-    self.waveY = waveY;
+    _waveX = waveX;
+    _waveY = waveY;
 }
 
 -(void)setWaveCallback:(void(^)(double x, double y, double tangentAngle))wave margin:(double)margin {
-    self.wave = wave;
-    self.waveM = margin;
+    _wave = wave;
+    _waveM = margin;
 }
 
 -(CAShapeLayer *)waveLayer_fg {
     if (!_waveLayer_fg) {
         _waveLayer_fg = [CAShapeLayer layer];
-        _waveLayer_fg.frame = self.waveFrame;
-        _waveLayer_fg.fillColor = self.fgColor.CGColor;
+        _waveLayer_fg.frame = _waveFrame;
+        _waveLayer_fg.fillColor = _fgColor.CGColor;
     }
     return _waveLayer_fg;
 }
@@ -146,33 +160,18 @@ void setLayerPath(CAShapeLayer *layer, CGPathRef path) {
 -(CAShapeLayer *)waveLayer_bg {
     if (!_waveLayer_bg) {
         _waveLayer_bg = [CAShapeLayer layer];
-        _waveLayer_bg.frame = self.waveFrame;
-        _waveLayer_bg.fillColor = self.bgColor.CGColor;
+        _waveLayer_bg.frame = _waveFrame;
+        _waveLayer_bg.fillColor = _bgColor.CGColor;
     }
     return _waveLayer_bg;
 }
 
 -(WaveCounter *)waveCounter {
     if (!_waveCounter) {
-        _waveCounter = [[WaveCounter alloc] initWithPeriod:self.wavePeriod speed:self.waveSpeed areaSize:self.waveFrame.size];
+        _waveCounter = [[WaveCounter alloc] initWithPeriod:_wavePeriod speed:_waveSpeed areaSize:_waveFrame.size];
     }
     return _waveCounter;
 }
 
 @end
 
-
-
-
-@implementation UIView (WaveAnimation)
-static void* kWaveAnimationKey = @"_kWaveAnimationKey";
-
--(WaveAnimation *)waveAnimation {
-    return objc_getAssociatedObject(self, kWaveAnimationKey);
-}
-
--(void)setWaveAnimation:(WaveAnimation *)waveAnimation {
-    objc_setAssociatedObject(self, kWaveAnimationKey, waveAnimation, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-}
-
-@end

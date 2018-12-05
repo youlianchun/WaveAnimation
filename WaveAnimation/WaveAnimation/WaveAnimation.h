@@ -11,6 +11,8 @@
 @interface WaveAnimation : NSObject
 
 @property (nonatomic, readonly) CGRect waveFrame;
+@property (nonatomic, readonly) double wavePeriod;
+@property (nonatomic, readonly) double waveSpeed;
 /**
  创建一个波浪动画
 
