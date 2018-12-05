@@ -68,14 +68,7 @@
 }
 
 -(void)wave:(void(^)(double x, double y, double tangentAngle))wave margin:(double)margin {
-    double x;
-    get_wave2(_offset, 0, _size.width, _size.width, &x);
-    if (x < margin) {
-        x = margin;
-    }
-    if (x > _size.width - margin) {
-        x = _size.width - margin;
-    }
+    double x = get_wave2(_offset, 0, _size.width, _size.width, margin);
     [self waveY:^(double y, double tangentAngle) {
         wave(x, y, tangentAngle);
     } atWaveX:x];
@@ -104,13 +97,13 @@ static void get_wave(double wave_offset_x, double wave_x, double wave_t, double 
 }
 
 // 待优化 获取当前时刻下波浪x的位置（小船水平位置）
-static void get_wave2(double wave_offset_x, double wave_x, double wave_t, double wave_a, double *wave_y) {
+static double get_wave2(double wave_offset_x, double wave_x, double wave_t, double wave_a, double margin) {
     double x = wave_x;
-    double A = wave_a / 2.0;
+    double A = ( wave_a - margin - margin ) / 2.0;
     double O = ( 2 * M_PI ) / wave_t;
-    double P = -wave_offset_x / 60.0 / 10;
-    double b = A;
-    *wave_y = A * cos( O * x + P ) + b;
+    double P = -wave_offset_x / 600.0;
+    double b = A + margin;
+    return A * cos( O * x + P ) + b;
 }
 
 /**
