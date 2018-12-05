@@ -99,7 +99,7 @@ static void get_wave(double wave_offset_x, double wave_x, double wave_t, double 
 // 待优化 获取当前时刻下波浪x的位置（小船水平位置）
 static double get_wave2(double wave_offset_x, double wave_x, double wave_t, double wave_a, double margin) {
     double x = wave_x;
-    double A = ( wave_a - margin - margin ) / 2.0;
+    double A = wave_a / 2.0 - margin;
     double O = ( 2 * M_PI ) / wave_t;
     double P = -wave_offset_x / 600.0;
     double b = A + margin;
