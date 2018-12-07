@@ -10,10 +10,6 @@
 #import "WaveCounter.h"
 #import <objc/runtime.h>
 
-@interface UIView ()
-@property (nonatomic) WaveAnimation *waveAnimation;
-@end
-
 @implementation UIView (WaveAnimation)
 -(WaveAnimation *)waveAnimation {
     return objc_getAssociatedObject(self, @selector(waveAnimation));
@@ -28,32 +24,30 @@
 
 @interface WaveAnimation ()
 @property (nonatomic, readonly) WaveCounter *waveCounter;
-@property (nonatomic, readonly) CADisplayLink *displayLink;
 @property (nonatomic, readonly) CAShapeLayer *waveLayer_fg;
 @property (nonatomic, readonly) CAShapeLayer *waveLayer_bg;
-@property (nonatomic, readonly) CGFloat waveX;
-@property (nonatomic, readonly) void(^waveY)(CGFloat currentY, double tangentAngle);
-@property (nonatomic, readonly) CGFloat waveM;
-@property (nonatomic, readonly) void(^wave)(double x, double y, double tangentAngle);
+@property (nonatomic, readonly) void(^waveY)(double y, double tangentAngle);
+@property (nonatomic, readonly) void(^waveBuoy)(double x, double y, double tangentAngle);
 @end
 
 @implementation WaveAnimation
 {
+    CADisplayLink *_displayLink;
     __weak UIView *_view;
     UIColor *_fgColor;
     UIColor *_bgColor;
+    double _waveX;
+    double _waveBuoyMargin;
+    double _waveBuoyNormalLineOffset;
 }
 @synthesize waveFrame = _waveFrame;
 @synthesize wavePeriod = _wavePeriod;
 @synthesize waveSpeed = _waveSpeed;
 @synthesize waveCounter = _waveCounter;
-@synthesize displayLink = _displayLink;
 @synthesize waveLayer_fg = _waveLayer_fg;
 @synthesize waveLayer_bg = _waveLayer_bg;
-@synthesize waveX = _waveX;
 @synthesize waveY = _waveY;
-@synthesize waveM = _waveM;
-@synthesize wave = _wave;
+@synthesize waveBuoy = _waveBuoy;
 
 -(instancetype)initWithView:(UIView*)view waveFrame:(CGRect)frame wavePeriod:(double)period waveSpeed:(double)speed {
     if (!view) {
@@ -63,7 +57,7 @@
     if (self) {
         _waveFrame = CGRectEqualToRect(frame, CGRectZero)?view.bounds:frame;
         _wavePeriod = period;
-        _waveSpeed = speed;
+        _waveSpeed = speed / 60.0;
         _view = view;
         _fgColor = [UIColor whiteColor];
         _bgColor = [UIColor colorWithWhite:1 alpha:0.5];
@@ -77,7 +71,7 @@
 }
 
 -(BOOL)didAdd {
-   return _view.waveAnimation != nil;
+    return _view.waveAnimation != nil;
 }
 
 -(void)addToView {
@@ -130,22 +124,25 @@ void setLayerPath(CAShapeLayer *layer, CGPathRef path) {
             wself.waveY(wy + y, tangentAngle);
         } atWaveX:_waveX];
     }
-    if (_wave) {
-        [self.waveCounter wave:^(double x, double y, double tangentAngle) {
-            wself.wave(x, wy + y, tangentAngle);
-        } margin:_waveM];
+    
+    if (_waveBuoy) {
+        [self.waveCounter waveBuoy:^(double x, double y, double tangentAngle) {
+            wself.waveBuoy(x, wy + y, tangentAngle);
+        } margin:_waveBuoyMargin normalLineOffset:_waveBuoyNormalLineOffset];
     }
-    [self.waveCounter nextTime];
+    
+    [self.waveCounter nextWithOffset:_waveSpeed];
 }
 
--(void)setWaveYCallback:(void(^)(double currentY, double tangentAngle))waveY atWaveX:(double)waveX {
+-(void)setWaveYCallback:(void(^)(double y, double tangentAngle))waveY atWaveX:(double)waveX {
     _waveX = waveX;
     _waveY = waveY;
 }
 
--(void)setWaveCallback:(void(^)(double x, double y, double tangentAngle))wave margin:(double)margin {
-    _wave = wave;
-    _waveM = margin;
+-(void)setWaveBuoyCallback:(void(^)(double x, double y, double tangentAngle))waveBuoy margin:(double)margin normalLineOffset:(double)normalLineOffset{
+    _waveBuoy = waveBuoy;
+    _waveBuoyMargin = margin;
+    _waveBuoyNormalLineOffset = normalLineOffset;
 }
 
 -(CAShapeLayer *)waveLayer_fg {
@@ -168,7 +165,7 @@ void setLayerPath(CAShapeLayer *layer, CGPathRef path) {
 
 -(WaveCounter *)waveCounter {
     if (!_waveCounter) {
-        _waveCounter = [[WaveCounter alloc] initWithPeriod:_wavePeriod speed:_waveSpeed areaSize:_waveFrame.size];
+        _waveCounter = [[WaveCounter alloc] initWithPeriod:_wavePeriod areaSize:_waveFrame.size];
     }
     return _waveCounter;
 }

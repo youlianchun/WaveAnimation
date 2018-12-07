@@ -8,11 +8,18 @@
 
 #import <UIKit/UIKit.h>
 
+@class WaveAnimation;
+@interface UIView (WaveAnimation)
+@property (nonatomic, readonly) WaveAnimation *waveAnimation;
+@end
+
+
 @interface WaveAnimation : NSObject
 
 @property (nonatomic, readonly) CGRect waveFrame;
 @property (nonatomic, readonly) double wavePeriod;
 @property (nonatomic, readonly) double waveSpeed;
+
 /**
  创建一个波浪动画
 
@@ -30,9 +37,9 @@
  @param waveY callback
  @param waveX 高度所在x位置
  */
--(void)setWaveYCallback:(void(^)(double currentY, double tangentAngle))waveY atWaveX:(double)waveX;
+-(void)setWaveYCallback:(void(^)(double y, double tangentAngle))waveY atWaveX:(double)waveX;
 
--(void)setWaveCallback:(void(^)(double x, double y, double tangentAngle))wave margin:(double)margin;
+-(void)setWaveBuoyCallback:(void(^)(double x, double y, double tangentAngle))waveBuoy margin:(double)margin normalLineOffset:(double)normalLineOffset;
 
 -(void)removeFromView;
 
@@ -41,6 +48,5 @@
 
 @end
 
-@interface UIView (WaveAnimation)
-@property (nonatomic, readonly) WaveAnimation *waveAnimation;
-@end
+
+

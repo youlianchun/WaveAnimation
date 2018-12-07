@@ -68,14 +68,14 @@
         sself.imgView.transform = CGAffineTransformRotate2D(center, origin,  tangentAngle + tangentAngle);
     } atWaveX:50];
     
-    [self initBoatAnimation:waveAnimation];
+    [self initWaveBoat:waveAnimation];
     
     [waveAnimation start];
     
 }
 
--(void)initBoatAnimation:(WaveAnimation*)animation {
-    double h = 4;
+-(void)initWaveBoat:(WaveAnimation*)waveAnimation  {
+    double h = 3;
     double w = 20;
     UIView *boatView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, w, h)];
     boatView.backgroundColor = [UIColor cyanColor];
@@ -87,28 +87,11 @@
     maskLayer.path = maskPath.CGPath;
     boatView.layer.mask = maskLayer;
     
-    [animation setWaveCallback:^(double x, double y, double tangentAngle) {
-        boatView.center = sin_tangent_center(h, x, y, tangentAngle);
+    [waveAnimation setWaveBuoyCallback:^(double x, double y, double tangentAngle) {
+        boatView.center = CGPointMake(x, y);
         boatView.transform = CGAffineTransformMakeRotation(tangentAngle);
-    } margin:w/2];
+    } margin:w/2 normalLineOffset:h/2];
 }
-
-/**
- sin_tangent_center
- 
- @param height view height
- @param x x
- @param y y
- @param tangent_angle 切线与水平线(x轴)夹角
- @return view new center
- */
-static CGPoint sin_tangent_center(double height, double x, double y, double tangent_angle) {
-    double h_2 = height / 2;
-    double cx = h_2 * sin(tangent_angle) + x;
-    double cy = h_2 * cos(tangent_angle) + y - height;
-    return CGPointMake(cx, cy);
-}
-
 
 static CGAffineTransform CGAffineTransformRotate2D(CGPoint point, CGPoint origin, double angle)
 {

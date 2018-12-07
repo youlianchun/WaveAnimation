@@ -10,16 +10,14 @@
 
 @implementation WaveCounter {
     double _period;
-    double _speed;
     CGSize _size;
     long double _offset;
 }
 
--(instancetype)initWithPeriod:(double)period speed:(double)speed areaSize:(CGSize)size {
+-(instancetype)initWithPeriod:(double)period areaSize:(CGSize)size {
     self = [super init];
     if (self) {
         _period = period;
-        _speed = speed;
         _size = size;
         _offset = 0;
     }
@@ -63,46 +61,73 @@
     path(path1, path2);
 }
 
--(void)nextTime {
-    _offset += _speed;
+-(void)nextWithOffset:(double)offset {
+    _offset += offset;
 }
 
--(void)wave:(void(^)(double x, double y, double tangentAngle))wave margin:(double)margin {
-    double x = get_wave2(_offset, 0, _size.width, _size.width, margin);
-    [self waveY:^(double y, double tangentAngle) {
-        wave(x, y, tangentAngle);
-    } atWaveX:x];
+-(void)waveBuoy:(void(^)(double x, double y, double tangentAngle))buoy margin:(double)margin normalLineOffset:(double)normalLineOffset {
+    double x = get_buoy_x(_offset / 10, _size.width, margin);
+    double y, angle;
+    get_wave(_offset, x, _period, _size.height, &y, &angle);
+    get_buoy_point(x, y, angle, normalLineOffset, &x, &y);
+    buoy(x, y, angle);
 }
 
--(void)nextTimePath:(void(^)(CGPathRef path1, CGPathRef path2))path waveY:(void(^)(double y, double tangentAngle))waveY atWaveX:(double)waveX {
-    
-    [self wavePath:path];
-    [self waveY:waveY atWaveX:waveX];
-
-    [self nextTime];
-}
 
 static void get_wave(double wave_offset_x, double wave_x, double wave_t, double wave_a, double *wave_y, double *tangent_angle) {
     double x = wave_x;
     double A = wave_a / 2.0;
     double O = ( 2 * M_PI ) / wave_t;
-    double P = -wave_offset_x / 60.0;
+    double P = -wave_offset_x ;
     if (wave_y) {
         double b = -A; //wave_offset_y
-        *wave_y = sin_y(x, A, O, P, b);
+        *wave_y = sin_ae(x, A, O, P, b);
     }
     if (tangent_angle) {
         *tangent_angle = sin_tangent_angle(x, A, O, P);
     }
 }
 
-// 待优化 获取当前时刻下波浪x的位置（小船水平位置）
-static double get_wave2(double wave_offset_x, double wave_x, double wave_t, double wave_a, double margin) {
-    double x = wave_x;
-    double A = wave_a / 2.0 - margin;
-    double O = ( 2 * M_PI ) / wave_t;
-    double P = -wave_offset_x / 600.0;
+// 获取当前时刻下波浪x的位置（浮标平位置）
+static double get_buoy_x(double wave_offset_x, double wave_w, double margin) {
+    double x = 0;
+    double A = wave_w / 2.0 - margin;
+    double O = ( 2 * M_PI ) / wave_w;
+    double P = -wave_offset_x;
     double b = A + margin;
+    return cos_ae(x, A, O, P, b);
+}
+
+// 获取浮标在法线方向上偏移后的新坐标
+static void get_buoy_point(double x, double y, double tangent_angle, double normal_line_offset, double *nx, double *ny) {
+    *nx = sin_ae(0, normal_line_offset, 0, tangent_angle, x);
+    *ny = cos_ae(0, normal_line_offset, 0, tangent_angle, y - normal_line_offset * 2);
+}
+
+/**
+ sin_tangent_angle
+ 
+ @param x x
+ @param A 决定峰值（即纵向拉伸压缩的倍数)
+ @param O (ω)：决定周期（最小正周期T=2π/∣ω∣）
+ @param P (φ)：决定波形与X轴位置关系或横向移动距离（左加右减）
+ @return 切线与水平线(x轴)夹角
+ */
+static double sin_tangent_angle(double x, double A, double O, double P) {
+    return cos_ae(x, A * O , O, P, 0);
+}
+
+/**
+ y = Acos(ωx+φ)+b
+ 
+ @param x x
+ @param A 决定峰值（即纵向拉伸压缩的倍数)
+ @param O (ω)：决定周期（最小正周期T=2π/∣ω∣）
+ @param P (φ)：决定波形与X轴位置关系或横向移动距离（左加右减）
+ @param b 表示波形在Y轴的位置关系或纵向移动距离（上加下减）
+ @return y
+ */
+static double cos_ae(double x, double A, double O, double P, double b) {
     return A * cos( O * x + P ) + b;
 }
 
@@ -116,37 +141,8 @@ static double get_wave2(double wave_offset_x, double wave_x, double wave_t, doub
  @param b 表示波形在Y轴的位置关系或纵向移动距离（上加下减）
  @return y
  */
-static double sin_y(double x, double A, double O, double P, double b) {
+static double sin_ae(double x, double A, double O, double P, double b) {
     return A * sin( O * x + P ) + b;
-}
-
-/**
- sin_tangent_angle
-
- @param x x
- @param A 决定峰值（即纵向拉伸压缩的倍数)
- @param O (ω)：决定周期（最小正周期T=2π/∣ω∣）
- @param P (φ)：决定波形与X轴位置关系或横向移动距离（左加右减）
- @return 切线与水平线(x轴)夹角
- */
-static double sin_tangent_angle(double x, double A, double O, double P) {
-    return A * O * cos( O * x + P );
-}
-
-/**
- sin_tangent_center
-
- @param height view height
- @param x x
- @param y y
- @param tangent_angle 切线与水平线(x轴)夹角
- @return view new center
- */
-static CGPoint sin_tangent_center(double height, double x, double y, double tangent_angle) {
-    double h_2 = height / 2;
-    double cx = h_2 * sin(tangent_angle) + x;
-    double cy = h_2 * cos(tangent_angle) + y - height;
-    return CGPointMake(cx, cy);
 }
 
 @end

@@ -11,9 +11,10 @@
 
 @interface WaveCounter : NSObject
 
--(instancetype)initWithPeriod:(double)period speed:(double)speed areaSize:(CGSize)size;
+-(instancetype)initWithPeriod:(double)period areaSize:(CGSize)size;
 -(void)waveY:(void(^)(double y, double tangentAngle))waveY atWaveX:(double)waveX;
 -(void)wavePath:(void(^)(CGPathRef path1, CGPathRef path2))path;
--(void)wave:(void(^)(double x, double y, double tangentAngle))wave margin:(double)margin;
--(void)nextTime;
+-(void)waveBuoy:(void(^)(double x, double y, double tangentAngle))buoy margin:(double)margin normalLineOffset:(double)normalLineOffset;
+-(void)nextWithOffset:(double)offset;
+
 @end
